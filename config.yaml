@@ -1,0 +1,37 @@
+models:
+  embedding_model: text-embedding-3-large
+  llm_model: gpt-4o
+  image_embedding_model: embed-v-4-0
+
+search:
+  semantic_weight: 0.4
+  structural_weight: 0.15
+  style_weight: 0.15
+  image_weight: 0.2
+  keyword_weight: 0.1
+
+index:
+  name: candidate-index
+  vector_dimensions:
+    semantic: 3072
+    structural: 1024
+    style: 512
+    image: 1024
+  hnsw:
+    m: 4
+    ef_construction: 400
+    ef_search: 500
+
+retrieval:
+  top_k: 50
+  k_nearest: 100
+
+extraction:
+  image_detail: high
+  temperature: 0.2
+  max_tokens: 4096
+
+batch:
+  index_batch_size: 500
+  embedding_chunk_size: 2048
+  max_concurrent_requests: 50

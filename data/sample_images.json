@@ -1,0 +1,52 @@
+[
+  {
+    "image_id": "sample-001",
+    "generation_prompt": "A cinematic night scene of a woman in a red dress walking through a rain-soaked Tokyo alley, neon signs reflecting off wet pavement, film noir lighting",
+    "image_url": "https://images.unsplash.com/photo-1542051841857-5f90071e7989?w=1024"
+  },
+  {
+    "image_id": "sample-002",
+    "generation_prompt": "Golden hour portrait of an elderly fisherman mending nets on a weathered wooden dock, warm backlight, shallow depth of field, documentary style",
+    "image_url": "https://images.unsplash.com/photo-1545450660-3378a7f3a364?w=1024"
+  },
+  {
+    "image_id": "sample-003",
+    "generation_prompt": "Aerial drone shot of turquoise ocean waves crashing against black volcanic rocks, abstract patterns in the foam, minimalist composition",
+    "image_url": "https://images.unsplash.com/photo-1505118380757-91f5f5632de0?w=1024"
+  },
+  {
+    "image_id": "sample-004",
+    "generation_prompt": "Abandoned industrial warehouse interior with shafts of dusty light streaming through broken windows, urban decay aesthetic, high contrast black and white",
+    "image_url": "https://images.unsplash.com/photo-1518893063132-36e46dbe2428?w=1024"
+  },
+  {
+    "image_id": "sample-005",
+    "generation_prompt": "A child running through a sunflower field at sunset, motion blur on the edges, warm golden tones, joyful summer atmosphere, lifestyle photography",
+    "image_url": "https://images.unsplash.com/photo-1500485035595-cbe6f645feb1?w=1024"
+  },
+  {
+    "image_id": "sample-006",
+    "generation_prompt": "Moody forest landscape with fog rolling between ancient redwood trees, soft diffused light, earth tones, Pacific Northwest atmosphere",
+    "image_url": "https://images.unsplash.com/photo-1448375240586-882707db888b?w=1024"
+  },
+  {
+    "image_id": "sample-007",
+    "generation_prompt": "Close-up macro photograph of morning dew drops on a spider web, bokeh background of purple wildflowers, natural light, vivid colors",
+    "image_url": "https://images.unsplash.com/photo-1530053969600-caed2596d242?w=1024"
+  },
+  {
+    "image_id": "sample-008",
+    "generation_prompt": "Two musicians performing jazz on a dimly lit stage, saxophone and piano, smoke atmosphere, blue and amber stage lighting, concert photography",
+    "image_url": "https://images.unsplash.com/photo-1511192336575-5a79af67a629?w=1024"
+  },
+  {
+    "image_id": "sample-009",
+    "generation_prompt": "Snow-covered mountain peak at dawn with alpenglow, dramatic clouds, wide-angle landscape, cold blue shadows contrasting warm pink highlights",
+    "image_url": "https://images.unsplash.com/photo-1519681393784-d120267933ba?w=1024"
+  },
+  {
+    "image_id": "sample-010",
+    "generation_prompt": "Bustling street food market in Bangkok at night, colorful lanterns, steam rising from woks, candid street photography, vibrant warm tones",
+    "image_url": "https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=1024"
+  }
+]
