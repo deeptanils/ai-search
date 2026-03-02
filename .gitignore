@@ -19,6 +19,9 @@ wheels/
 # OS
 .DS_Store
 
+# Data
+data/images/
+
 # Testing
 .coverage
 htmlcov/
