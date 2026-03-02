@@ -19,8 +19,8 @@ class TestBuildIndexSchema:
 
         index = build_index_schema()
 
-        # 15 primitive fields + 4 primary vectors = 19
-        assert len(index.fields) == 19
+        # 20 primitive fields + 4 primary vectors = 24
+        assert len(index.fields) == 24
 
     @patch("ai_search.indexing.schema.load_config")
     def test_key_field(self, mock_config: MagicMock) -> None:

@@ -1,98 +1,55 @@
-"""Quick search verification against the candidate-index."""
+"""Quick smoke test for text-to-image and image-to-image search."""
 
-from ai_search.clients import get_search_client
+from __future__ import annotations
+
+import asyncio
+import os
+from pathlib import Path
+
+if not os.environ.get("SSL_CERT_FILE"):
+    _sys_cert = "/private/etc/ssl/cert.pem"
+    if os.path.exists(_sys_cert):
+        os.environ["SSL_CERT_FILE"] = _sys_cert
+
+from ai_search.models import SearchMode
+from ai_search.retrieval.pipeline import search
+
+PROJECT_ROOT = Path(__file__).resolve().parent.parent
 
 
-def main() -> None:
-    client = get_search_client()
+def _print_results(results: list) -> None:
+    for i, r in enumerate(results, 1):
+        url_preview = r.image_url[:90] if r.image_url else "(none)"
+        print(f"  {i}. [{r.image_id}] score={r.search_score:.4f}  scene={r.scene_type}")
+        print(f"     url={url_preview}")
+        print(f"     tags={r.tags[:4]}")
 
-    # 1. All documents
-    results = list(
-        client.search(
-            search_text="*",
-            select=[
-                "image_id",
-                "generation_prompt",
-                "scene_type",
-                "tags",
-                "character_count",
-                "emotional_polarity",
-            ],
-            top=20,
-        )
-    )
-    print(f"=== Total documents: {len(results)} ===\n")
-    for r in results:
-        score = r.get("@search.score", 0)
-        iid = r["image_id"]
-        scene = r.get("scene_type", "?")
-        chars = r.get("character_count", "?")
-        pol = r.get("emotional_polarity", "?")
-        prompt = (r.get("generation_prompt") or "")[:90]
-        tags = r.get("tags", []) or []
-        print(f"  {iid:12s}  score={score:.4f}  scene={scene}  chars={chars}  polarity={pol}")
-        print(f"               prompt: {prompt}")
-        print(f"               tags:   {tags[:5]}")
-        print()
 
-    # 2. Keyword: forest
-    print('=== Keyword: "forest" ===')
-    results = list(
-        client.search(search_text="forest", select=["image_id", "generation_prompt"], top=5)
-    )
-    print(f"  Results: {len(results)}")
-    for r in results:
-        print(f"  {r['image_id']:12s}  score={r.get('@search.score',0):.4f}  {(r.get('generation_prompt') or '')[:90]}")
-    print()
+async def main() -> None:
+    # ── Text searches ────────────────────────────────────────────────
+    queries = [
+        "Hanuman flying over the ocean",
+        "golden palace coronation ceremony",
+        "demon king battle scene",
+    ]
+    for q in queries:
+        print(f'\n=== TEXT SEARCH: "{q}" ===')
+        results = await search(mode=SearchMode.TEXT, query_text=q, top=5)
+        _print_results(results)
 
-    # 3. Keyword: musician jazz
-    print('=== Keyword: "musician jazz" ===')
-    results = list(
-        client.search(
-            search_text="musician jazz",
-            select=["image_id", "generation_prompt", "character_count"],
+    # ── Image search ─────────────────────────────────────────────────
+    test_image = PROJECT_ROOT / "data" / "images" / "ramayana-001.png"
+    if test_image.exists():
+        print(f"\n=== IMAGE SEARCH: {test_image.name} ===")
+        results = await search(
+            mode=SearchMode.IMAGE,
+            query_image_bytes=test_image.read_bytes(),
             top=5,
         )
-    )
-    print(f"  Results: {len(results)}")
-    for r in results:
-        print(f"  {r['image_id']:12s}  score={r.get('@search.score',0):.4f}  chars={r.get('character_count','?')}  {(r.get('generation_prompt') or '')[:90]}")
-    print()
-
-    # 4. Keyword: ocean waves
-    print('=== Keyword: "ocean waves" ===')
-    results = list(
-        client.search(search_text="ocean waves", select=["image_id", "generation_prompt"], top=5)
-    )
-    print(f"  Results: {len(results)}")
-    for r in results:
-        print(f"  {r['image_id']:12s}  score={r.get('@search.score',0):.4f}  {(r.get('generation_prompt') or '')[:90]}")
-    print()
-
-    # 5. Filter: character_count > 0
-    print("=== Filter: character_count gt 0 ===")
-    results = list(
-        client.search(
-            search_text="*",
-            filter="character_count gt 0",
-            select=["image_id", "character_count", "generation_prompt"],
-            top=10,
-        )
-    )
-    print(f"  Results: {len(results)}")
-    for r in results:
-        print(f"  {r['image_id']:12s}  chars={r.get('character_count','?')}  {(r.get('generation_prompt') or '')[:90]}")
-    print()
-
-    # 6. Keyword: mountain snow
-    print('=== Keyword: "mountain snow" ===')
-    results = list(
-        client.search(search_text="mountain snow", select=["image_id", "generation_prompt"], top=5)
-    )
-    print(f"  Results: {len(results)}")
-    for r in results:
-        print(f"  {r['image_id']:12s}  score={r.get('@search.score',0):.4f}  {(r.get('generation_prompt') or '')[:90]}")
+        _print_results(results)
+    else:
+        print(f"\nSkipping image search — {test_image} not found")
 
 
 if __name__ == "__main__":
-    main()
+    asyncio.run(main())

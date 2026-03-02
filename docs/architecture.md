@@ -87,12 +87,13 @@ Query parameters: `api-version` (default `2024-02-01`), `model-version` (default
 
 ### Azure AI Search SDK Calls
 
-| SDK Method                                     | Location                            | Purpose                                |
-|------------------------------------------------|-------------------------------------|----------------------------------------|
-| `SearchIndexClient.create_or_update_index()`   | `src/ai_search/indexing/schema.py`  | Create or update the search index      |
-| `SearchClient.upload_documents()`              | `src/ai_search/indexing/indexer.py` | Batch document upload with retry       |
-| `SearchClient.search()`                        | `src/ai_search/retrieval/search.py` | Hybrid search (BM25 + multi-vector RRF) |
-| `SearchClient.get_document()`                  | `scripts/ingest_samples.py`         | Check if document is already indexed   |
+| SDK Method                                     | Location                            | Purpose                                             |
+|------------------------------------------------|-------------------------------------|------------------------------------------------------|
+| `SearchIndexClient.create_or_update_index()`   | `src/ai_search/indexing/schema.py`  | Create or update the search index                    |
+| `SearchClient.upload_documents()`              | `src/ai_search/indexing/indexer.py` | Batch document upload with retry                     |
+| `SearchClient.search()` — hybrid               | `src/ai_search/retrieval/search.py` | Text search: BM25 + multi-vector RRF                |
+| `SearchClient.search()` — vector retrieval      | `src/ai_search/retrieval/search.py` | Image search: retrieve all docs with `image_vector`  |
+| `SearchClient.get_document()`                  | `scripts/ingest_samples.py`         | Check if document is already indexed                 |
 
 ---
 
@@ -408,10 +409,46 @@ Empty vector fields (`list` with `len == 0`) are omitted from the upload payload
 
 ## Retrieval Pipeline
 
-### Pipeline Flow
+The retrieval pipeline supports two search modes through a unified entry point. Both modes accept different inputs, follow distinct ranking strategies, and return the same `SearchResult` model.
+
+| Mode    | Entry                       | Input            | Strategy                                | Scoring                  |
+|---------|-----------------------------|------------------|-----------------------------------------|--------------------------|
+| `TEXT`  | `search(mode=SearchMode.TEXT)`  | Free-text query  | Hybrid BM25 + multi-vector RRF          | Min-max normalized 0–1   |
+| `IMAGE` | `search(mode=SearchMode.IMAGE)` | Raw image bytes  | Direct cosine similarity on `image_vector` | True cosine similarity 0–1 |
+
+### SearchMode Enum
+
+Defined in `src/ai_search/models.py`:
+
+```python
+class SearchMode(StrEnum):
+    TEXT = "text"    # Hybrid BM25 + multi-vector RRF
+    IMAGE = "image"  # Direct cosine similarity on image embeddings
+```
+
+### Unified Entry Point
+
+Defined in `src/ai_search/retrieval/pipeline.py`:
+
+```python
+async def search(
+    *,
+    mode: SearchMode = SearchMode.TEXT,
+    query_text: str | None = None,
+    query_image_bytes: bytes | None = None,
+    odata_filter: str | None = None,
+    top: int | None = None,
+) -> list[SearchResult]:
+```
+
+The function dispatches to `_search_by_text()` or `_search_by_image()` based on the mode. Both paths convert raw index documents through a shared `_docs_to_results()` helper to produce `SearchResult` instances.
+
+### Text Search (SearchMode.TEXT)
+
+#### Flow
 
 ```text
-Query Text (+ optional image URL)
+Query Text
     │
     ├── GPT-4o LLM expansion ──► structural_description, style_description
     │       └── temperature=0.2, max_tokens=200
@@ -420,34 +457,33 @@ Query Text (+ optional image URL)
     ├── text-embedding-3-large ──► structural_vector (1024d)
     ├── text-embedding-3-large ──► style_vector (512d)
     │
-    └── embed-v-4-0 ──► image_vector (1024d)
-            ├── If query has image URL: embed_image() — visual embedding
-            └── If text only: embed_text_for_image_search() — cross-modal text-to-image
+    └── embed-v-4-0 (cross-modal) ──► image_vector (1024d)
+            └── embed_text_for_image_search() — text projected into image space
     │
     ▼
 Azure AI Search Hybrid Query
-    ├── BM25 full-text on generation_prompt (with text-boost scoring profile)
-    ├── VectorizedQuery × 4 (weighted, k_nearest=100)
+    ├── BM25 full-text on generation_prompt
+    ├── VectorizedQuery × 4 (weighted, k_nearest from config)
     └── RRF fusion ──► ranked results
     │
     ▼
-Relevance Scoring ──► Confidence tier (HIGH / MEDIUM / LOW)
+Min-max score normalization ──► 0–1 (top result = 1.0)
     │
     ▼
-SearchResult[] (filtered by min_confidence)
+SearchResult[]
 ```
 
-### Query Vector Generation
+#### Query Vector Generation
 
 Defined in `src/ai_search/retrieval/query.py`:
 
 1. **LLM expansion** generates structural and style descriptions from the query text using GPT-4o (`temperature=0.2`, `max_tokens=200`)
-2. **Parallel text embedding** via `asyncio.gather()` produces semantic (3072d), structural (1024d), and style (512d) vectors
-3. **Image-space vector**: if a query image URL is provided, `embed_image()` is used; otherwise `embed_text_for_image_search()` performs cross-modal text-to-image embedding
+2. **Parallel text embedding** via `asyncio.gather()` produces semantic (3072d), structural (1024d), and style (512d) vectors using `text-embedding-3-large` at Matryoshka dimensions
+3. **Image-space vector**: `embed_text_for_image_search()` projects the query text into the image embedding space via `embed-v-4-0` for cross-modal matching
 
-### Hybrid Search Execution
+#### Hybrid Search Execution
 
-Defined in `src/ai_search/retrieval/search.py`:
+Defined in `src/ai_search/retrieval/search.py` → `execute_hybrid_search()`:
 
 ```python
 VectorizedQuery(
@@ -474,13 +510,76 @@ VectorizedQuery(
 client.search(
     search_text=query_text,
     vector_queries=[semantic_vq, structural_vq, style_vq, image_vq],
-    filter=odata_filter,           # Optional OData filter expression
+    filter=odata_filter,
     select=SELECT_FIELDS,
     top=50,                        # from config.retrieval.top_k
 )
 ```
 
-**SELECT_FIELDS**: `image_id`, `generation_prompt`, `scene_type`, `tags`, `narrative_type`, `emotional_polarity`, `low_light_score`, `character_count`, `extraction_json`, `metadata_json`
+Azure AI Search fuses BM25 text scores with vector scores using **Reciprocal Rank Fusion (RRF)**. Each result receives a composite `@search.score` that combines all ranking signals.
+
+#### Score Normalization
+
+After retrieval, `_normalize_scores()` applies **min-max normalization** so the top result always scores 1.0 and the lowest result scores 0.0. When all scores are identical, every document receives 1.0.
+
+```python
+normalized = (score - min_score) / (max_score - min_score)
+```
+
+**SELECT_FIELDS**: `image_id`, `generation_prompt`, `image_url`, `scene_type`, `tags`, `narrative_type`, `emotional_polarity`, `low_light_score`, `character_count`, `extraction_json`, `metadata_json`
+
+### Image Search (SearchMode.IMAGE)
+
+#### Flow
+
+```text
+Query Image (JPEG/PNG bytes)
+    │
+    └── embed-v-4-0 ──► query_vector (1024d)
+            └── embed_image(image_bytes=...) via ImageEmbeddingsClient
+    │
+    ▼
+Retrieve ALL documents with stored image_vector from index
+    └── client.search(search_text="*", select=[...SELECT_FIELDS, "image_vector"], top=1000)
+    │
+    ▼
+Compute cosine similarity: query_vector · doc_vector / (‖q‖ × ‖d‖)
+    │
+    ▼
+Sort by similarity descending ──► take top_k
+    │
+    ▼
+SearchResult[] (scores are true cosine similarity in [0, 1])
+```
+
+#### Why Direct Cosine Instead of HNSW
+
+Azure AI Search uses HNSW (Hierarchical Navigable Small World) for approximate nearest neighbor search. HNSW scores (`@search.score`) are not true cosine similarities — they are internal ranking values that vary based on the index graph topology. When combined with RRF fusion, the scores become even less interpretable.
+
+For image-to-image search, accurate similarity ranking is critical. The image search path bypasses HNSW entirely by:
+
+1. Retrieving all stored `image_vector` values (the field is marked `retrievable=True` in the index schema)
+2. Computing exact cosine similarity using NumPy
+3. Sorting results by true similarity
+
+This approach is viable because the index size (< 1000 documents on Basic tier) makes exhaustive comparison fast (< 100ms for 1000 × 1024d vectors).
+
+#### Cosine Similarity Computation
+
+Defined in `src/ai_search/retrieval/search.py` → `execute_image_search()`:
+
+```python
+q = np.array(query_vector, dtype=np.float64)
+q_norm = float(np.linalg.norm(q))
+
+for doc in all_results:
+    d = np.array(stored_vec, dtype=np.float64)
+    d_norm = float(np.linalg.norm(d))
+    cosine_sim = float(np.dot(q, d) / (q_norm * d_norm))
+    doc["search_score"] = max(0.0, min(1.0, cosine_sim))
+```
+
+Scores are clamped to [0, 1]. For normalized embeddings from Cohere Embed v4, cosine similarity is always non-negative.
 
 ### Relevance Scoring
 
@@ -504,6 +603,8 @@ Cosine similarity with high-dimensional embeddings produces uniformly high score
 | **LOW**    | below thresholds | — | —    | No confident match               |
 
 Returns `RelevanceResult` dataclass with: `confidence`, `top_score`, `gap`, `gap_ratio`, `z_score`, `spread`, `mean`, `stdev`.
+
+Relevance filtering is available for text search via `execute_hybrid_search(min_confidence=...)`. Image search returns true cosine similarity scores directly, making confidence-tier classification unnecessary.
 
 ---
 
@@ -617,6 +718,7 @@ Defined in `src/ai_search/models.py`:
 
 | Model                  | Key Fields                                                                        | Purpose                            |
 |------------------------|-----------------------------------------------------------------------------------|------------------------------------|
+| `SearchMode`           | `TEXT`, `IMAGE`                                                                  | Search modality selector (StrEnum) |
 | `CharacterDescription` | `character_id`, `semantic`, `emotion`, `pose`                                    | Per-character descriptions         |
 | `ImageMetadata`        | `scene_type`, `time_of_day`, `lighting_condition`, `primary_subject`, `artistic_style`, `tags`, `narrative_theme` | Synthetic metadata                 |
 | `NarrativeIntent`      | `story_summary`, `narrative_type`, `tone`                                        | Narrative analysis                 |
@@ -625,8 +727,8 @@ Defined in `src/ai_search/models.py`:
 | `LowLightMetrics`      | `brightness_score`, `contrast_score`, `noise_estimate`, `shadow_dominance`, `visibility_confidence` | Low-light quality (all 0.0–1.0)    |
 | `ImageExtraction`      | All descriptions + `characters`, `metadata`, `narrative`, `emotion`, `objects`, `low_light` | Full GPT-4o extraction output      |
 | `ImageVectors`         | `semantic_vector`, `structural_vector`, `style_vector`, `image_vector`           | All 4 embedding vectors            |
-| `SearchDocument`       | 15 primitive + 4 vector fields                                                   | Index upload format                |
-| `SearchResult`         | `image_id`, `search_score`, `generation_prompt`, `scene_type`, `tags`            | Query result format                |
+| `SearchDocument`       | 16 primitive + 4 vector fields                                                   | Index upload format                |
+| `SearchResult`         | `image_id`, `search_score`, `generation_prompt`, `image_url`, `scene_type`, `tags` | Query result format                |
 
 ---
 

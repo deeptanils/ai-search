@@ -53,6 +53,27 @@ class AzureSearchSecrets(BaseSettings):
     index_name: str = "candidate-index"
 
 
+class AzureBlobStorageSecrets(BaseSettings):
+    """Azure Blob Storage secrets from .env."""
+
+    model_config = SettingsConfigDict(
+        env_prefix="AZURE_STORAGE_",
+        env_file=".env",
+        env_file_encoding="utf-8",
+        extra="ignore",
+    )
+
+    account_name: str | None = None
+    container_name: str = "images"
+
+    @property
+    def account_url(self) -> str | None:
+        """Derive the blob endpoint URL from the account name."""
+        if not self.account_name:
+            return None
+        return f"https://{self.account_name}.blob.core.windows.net"
+
+
 class AzureComputerVisionSecrets(BaseSettings):
     """Azure Computer Vision (Florence) secrets from .env."""
 
@@ -120,11 +141,24 @@ class RetrievalConfig(BaseModel):
 
 
 class ExtractionConfig(BaseModel):
-    """GPT-4o extraction configuration."""
+    """GPT-4o extraction configuration (ingestion-time)."""
 
     image_detail: str = "high"
     temperature: float = 0.2
-    max_tokens: int = 4096
+    max_tokens: int = 5000
+
+
+class QueryExtractionConfig(BaseModel):
+    """GPT-4o extraction configuration (query-time image search).
+
+    Uses ``high`` detail for richer cinematic descriptions.
+    ``max_image_size`` controls resize before sending to GPT-4o.
+    """
+
+    image_detail: str = "high"
+    temperature: float = 0.0
+    max_tokens: int = 1200
+    max_image_size: int = 768
 
 
 class BatchConfig(BaseModel):
@@ -140,9 +174,17 @@ class AppConfig(BaseModel):
 
     models: ModelsConfig = ModelsConfig()
     search: SearchWeightsConfig = SearchWeightsConfig()
+    image_search: SearchWeightsConfig = SearchWeightsConfig(
+        semantic_weight=0.15,
+        structural_weight=0.05,
+        style_weight=0.05,
+        image_weight=0.65,
+        keyword_weight=0.1,
+    )
     index: IndexConfig = IndexConfig()
     retrieval: RetrievalConfig = RetrievalConfig()
     extraction: ExtractionConfig = ExtractionConfig()
+    query_extraction: QueryExtractionConfig = QueryExtractionConfig()
     batch: BatchConfig = BatchConfig()
 
 
@@ -172,6 +214,12 @@ def load_openai_secrets() -> AzureOpenAISecrets:
 def load_search_secrets() -> AzureSearchSecrets:
     """Load Azure AI Search secrets from .env."""
     return AzureSearchSecrets()  # type: ignore[call-arg]
+
+
+@lru_cache(maxsize=1)
+def load_blob_secrets() -> AzureBlobStorageSecrets:
+    """Load Azure Blob Storage secrets from .env."""
+    return AzureBlobStorageSecrets()
 
 
 @lru_cache(maxsize=1)

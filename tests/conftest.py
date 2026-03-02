@@ -51,7 +51,7 @@ def sample_config(tmp_path: Path) -> AppConfig:
             "top_k": 50,
             "k_nearest": 100,
         },
-        "extraction": {"temperature": 0.2, "max_tokens": 4096},
+        "extraction": {"temperature": 0.2, "max_tokens": 5000},
         "batch": {"index_batch_size": 500, "embedding_chunk_size": 2048},
     }
 

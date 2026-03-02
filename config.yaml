@@ -10,6 +10,14 @@ search:
   image_weight: 0.2
   keyword_weight: 0.1
 
+# Weights for image-to-image search (image_vector gets higher weight)
+image_search:
+  semantic_weight: 0.15
+  structural_weight: 0.05
+  style_weight: 0.05
+  image_weight: 0.65
+  keyword_weight: 0.1
+
 index:
   name: candidate-index
   vector_dimensions:
@@ -29,7 +37,15 @@ retrieval:
 extraction:
   image_detail: high
   temperature: 0.2
-  max_tokens: 4096
+  max_tokens: 5000
+
+# Query-time GPT-4o extraction settings (image search).
+# Use lower detail and fewer tokens for speed.
+query_extraction:
+  image_detail: high
+  temperature: 0.0
+  max_tokens: 1200
+  max_image_size: 768
 
 batch:
   index_batch_size: 500

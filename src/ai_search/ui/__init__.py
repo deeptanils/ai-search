@@ -1,0 +1,1 @@
+"""Search visualization UI module."""

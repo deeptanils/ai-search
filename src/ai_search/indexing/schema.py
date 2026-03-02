@@ -30,12 +30,14 @@ def _build_vector_field(
     name: str,
     dimensions: int,
     profile: str = PROFILE_NAME,
+    retrievable: bool = False,
 ) -> SearchField:
     """Build a vector search field definition."""
     return SearchField(
         name=name,
         type=SearchFieldDataType.Collection(SearchFieldDataType.Single),
         searchable=True,
+        hidden=not retrievable,
         vector_search_dimensions=dimensions,
         vector_search_profile_name=profile,
     )
@@ -79,6 +81,22 @@ def build_index_schema() -> SearchIndex:
             name="lighting_condition", type=SearchFieldDataType.String, filterable=True, facetable=True
         ),
         SimpleField(name="primary_subject", type=SearchFieldDataType.String, filterable=True),
+        SearchableField(
+            name="character_action", type=SearchFieldDataType.String, filterable=True, facetable=True,
+        ),
+        SearchField(
+            name="weapons_props",
+            type=SearchFieldDataType.Collection(SearchFieldDataType.String),
+            searchable=True,
+            filterable=True,
+            facetable=True,
+        ),
+        SimpleField(
+            name="location_name", type=SearchFieldDataType.String, filterable=True, facetable=True,
+        ),
+        SimpleField(
+            name="episode_name", type=SearchFieldDataType.String, filterable=True, facetable=True,
+        ),
         SimpleField(name="artistic_style", type=SearchFieldDataType.String, filterable=True, facetable=True),
         SearchField(
             name="tags",
@@ -96,6 +114,7 @@ def build_index_schema() -> SearchIndex:
         SimpleField(
             name="character_count", type=SearchFieldDataType.Int32, filterable=True, sortable=True
         ),
+        SimpleField(name="image_url", type=SearchFieldDataType.String, filterable=False),
         SimpleField(name="metadata_json", type=SearchFieldDataType.String),
         SimpleField(name="extraction_json", type=SearchFieldDataType.String),
     ]
@@ -105,7 +124,7 @@ def build_index_schema() -> SearchIndex:
         _build_vector_field("semantic_vector", dims.semantic),
         _build_vector_field("structural_vector", dims.structural),
         _build_vector_field("style_vector", dims.style),
-        _build_vector_field("image_vector", dims.image),
+        _build_vector_field("image_vector", dims.image, retrievable=True),
     ])
 
     # Text-boost scoring profile
@@ -114,7 +133,9 @@ def build_index_schema() -> SearchIndex:
         text_weights=TextWeights(
             weights={
                 "generation_prompt": 3.0,
-                "tags": 2.0,
+                "tags": 3.0,
+                "character_action": 2.5,
+                "weapons_props": 2.0,
             }
         ),
     )
