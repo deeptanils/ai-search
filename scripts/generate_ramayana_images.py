@@ -1,0 +1,752 @@
+"""Generate Ramayana-themed sample images using gpt-image-1.5 via Azure OpenAI.
+
+This script generates mythological images based on Ramayana characters
+and saves them locally to data/images/.
+
+Usage:
+    source .venv/bin/activate
+    SSL_CERT_FILE=/private/etc/ssl/cert.pem PYTHONPATH=src python scripts/generate_ramayana_images.py
+    SSL_CERT_FILE=/private/etc/ssl/cert.pem PYTHONPATH=src python scripts/generate_ramayana_images.py --dry-run
+"""
+
+from __future__ import annotations
+
+import argparse
+import base64
+import json
+import os
+import sys
+import threading
+import time
+from concurrent.futures import ThreadPoolExecutor, as_completed
+from pathlib import Path
+
+# Force system SSL certs.
+if not os.environ.get("SSL_CERT_FILE"):
+    _sys_cert = "/private/etc/ssl/cert.pem"
+    if os.path.exists(_sys_cert):
+        os.environ["SSL_CERT_FILE"] = _sys_cert
+
+from ai_search.clients import get_openai_client  # noqa: E402
+
+DATA_DIR = Path(__file__).resolve().parent.parent / "data"
+IMAGES_DIR = DATA_DIR / "images"
+SAMPLE_FILE = DATA_DIR / "sample_images.json"
+
+# Ramayana-themed image generation prompts
+RAMAYANA_PROMPTS = [
+    {
+        "image_id": "ramayana-001",
+        "generation_prompt": (
+            "Lord Rama standing majestically in an ancient Indian forest, "
+            "drawing his divine golden bow Kodanda with a glowing arrow aimed "
+            "at the sky, wearing royal blue armor with gold ornaments and a "
+            "jeweled crown, divine aura radiating around him, epic Indian "
+            "mythology art style, cinematic lighting, highly detailed"
+        ),
+    },
+    {
+        "image_id": "ramayana-002",
+        "generation_prompt": (
+            "Hanuman the mighty monkey god standing on top of a rocky hill "
+            "overlooking the golden city of Lanka across the ocean, his "
+            "muscular divine form glowing with orange-golden light, wearing "
+            "a red dhoti, devotional pose with hands folded, dramatic sunset "
+            "with clouds painted in orange and purple, Indian mythology art, "
+            "epic cinematic composition"
+        ),
+    },
+    {
+        "image_id": "ramayana-003",
+        "generation_prompt": (
+            "Hanuman wielding his mighty gada (mace) in a powerful battle "
+            "stance, the massive golden mace raised above his head, "
+            "thunderclouds gathering behind him crackling with lightning, "
+            "divine aura of fire and energy radiating from his body, wearing "
+            "warrior armor with a flowing red cape, Indian mythology epic "
+            "art style, dramatic low-angle composition"
+        ),
+    },
+    {
+        "image_id": "ramayana-004",
+        "generation_prompt": (
+            "Goddess Sita sitting gracefully in the Ashoka Vatika garden in "
+            "Lanka, surrounded by ancient supernatural trees with glowing "
+            "golden leaves, wearing a flowing white and gold saree, serene "
+            "but determined expression on her face, divine lotus flowers "
+            "blooming around her, soft ethereal light filtering through "
+            "the canopy, Indian mythology art, peaceful yet powerful"
+        ),
+    },
+    {
+        "image_id": "ramayana-005",
+        "generation_prompt": (
+            "Ravana the ten-headed demon king of Lanka sitting on his "
+            "ornate golden throne, each of his ten heads showing a "
+            "different fierce expression, twenty powerful arms holding "
+            "various divine weapons, surrounded by an opulent palace "
+            "interior with jeweled pillars and burning torches, dark "
+            "regal atmosphere, Indian mythology villain art, dramatic "
+            "lighting from below"
+        ),
+    },
+    {
+        "image_id": "ramayana-006",
+        "generation_prompt": (
+            "The epic Ram Setu bridge being built across the vast ocean by "
+            "an army of vanaras (monkey warriors), massive boulders being "
+            "placed with inscriptions of Lord Rama's name, dramatic ocean "
+            "waves crashing against the stones, divine golden light "
+            "streaming from the sky, thousands of vanaras working together, "
+            "wide-angle panoramic composition, Indian mythology epic art"
+        ),
+    },
+    {
+        "image_id": "ramayana-007",
+        "generation_prompt": (
+            "Lakshmana standing guard at night with his golden bow drawn, "
+            "protecting the forest dwelling where Ram and Sita sleep, "
+            "moonlit ancient Indian wilderness with fireflies, the "
+            "Lakshman Rekha protective line glowing on the ground, "
+            "vigilant warrior expression, wearing green and gold armor, "
+            "mystical forest atmosphere, Indian mythology art"
+        ),
+    },
+    {
+        "image_id": "ramayana-008",
+        "generation_prompt": (
+            "The golden deer Maricha leaping through an enchanted forest, "
+            "its entire body shimmering with supernatural golden light and "
+            "sparkling particles, jewel-like eyes glowing with magic, "
+            "mystical forest surroundings with ancient trees and glowing "
+            "flowers, the deer trailing streams of golden light as it runs, "
+            "magical fantasy Indian mythology art style"
+        ),
+    },
+    {
+        "image_id": "ramayana-009",
+        "generation_prompt": (
+            "Jatayu the giant divine eagle fighting Ravana's flying chariot "
+            "Pushpaka Vimana in an aerial combat scene to save Sita, "
+            "massive wings spread across a dramatic cloudy sky, divine "
+            "feathers glowing and falling, Ravana wielding a sword from "
+            "the chariot, epic battle between good and evil, Indian "
+            "mythology action art, dynamic composition"
+        ),
+    },
+    {
+        "image_id": "ramayana-010",
+        "generation_prompt": (
+            "The grand coronation ceremony of Lord Rama in the golden palace "
+            "of Ayodhya, Rama and Sita seated on the magnificent throne, "
+            "celestial beings showering flowers from above, Hanuman kneeling "
+            "devotionally, Lakshmana standing with a ceremonial umbrella, "
+            "citizens celebrating, divine light illuminating the entire "
+            "palace, ornate Indian architecture, Indian mythology art, "
+            "warm golden atmosphere"
+        ),
+    },
+    {
+        "image_id": "ramayana-011",
+        "generation_prompt": (
+            "Rama and Lakshmana walking through the dense Dandaka forest "
+            "carrying bows and quivers, ancient banyan trees towering above "
+            "them, shafts of golden sunlight piercing through the thick "
+            "canopy, a narrow forest path ahead, peaceful yet mysterious "
+            "atmosphere, Indian mythology art, warm earthy tones"
+        ),
+    },
+    {
+        "image_id": "ramayana-012",
+        "generation_prompt": (
+            "Sage Vishwamitra guiding young Rama and Lakshmana through a "
+            "dark enchanted forest to fight demons, the sage holding a "
+            "glowing staff, both princes carrying golden bows, ethereal "
+            "mist swirling at ground level, ancient trees with twisted "
+            "roots, mystical blue-green moonlight, Indian mythology art"
+        ),
+    },
+    {
+        "image_id": "ramayana-013",
+        "generation_prompt": (
+            "The breaking of Lord Shiva's bow Pinaka by Rama at Sita's "
+            "Swayamvar ceremony, the massive ancient bow shattering with "
+            "a burst of divine energy and light, shocked kings and princes "
+            "watching from ornate seats, Sita watching with joy, a grand "
+            "palace hall with decorated pillars, Indian mythology art, "
+            "dramatic moment frozen in time"
+        ),
+    },
+    {
+        "image_id": "ramayana-014",
+        "generation_prompt": (
+            "Bharata carrying Rama's golden paduka sandals on his head "
+            "walking back to Ayodhya, a long procession behind him on a "
+            "dusty ancient road, devotion and sadness on his face, the "
+            "sandals glowing with divine light, rolling green hills of "
+            "ancient India in the background, warm sunset tones, Indian "
+            "mythology devotional art"
+        ),
+    },
+    {
+        "image_id": "ramayana-015",
+        "generation_prompt": (
+            "Surpanakha the demoness in her terrifying true form attacking "
+            "in the forest, sharp claws extended, wild dark hair flying, "
+            "red fiery eyes glowing with rage, dark magical aura surrounding "
+            "her, twisted trees and shadows in the background, dramatic "
+            "horror-fantasy lighting, Indian mythology dark art"
+        ),
+    },
+    {
+        "image_id": "ramayana-016",
+        "generation_prompt": (
+            "Hanuman flying across the vast ocean to Lanka carrying the "
+            "Sanjeevani mountain on his palm, the entire mountain with "
+            "glowing medicinal herbs lifted above the clouds, Hanuman's "
+            "massive form stretching across the sky, moonlit ocean below "
+            "with sparkling waves, dramatic clouds parting around him, "
+            "Indian mythology epic art, wide cinematic composition"
+        ),
+    },
+    {
+        "image_id": "ramayana-017",
+        "generation_prompt": (
+            "Hanuman setting Lanka on fire with his burning tail, leaping "
+            "from rooftop to rooftop of golden palaces, massive flames "
+            "engulfing the demon city, Hanuman's tail wrapped in blazing "
+            "fire trailing behind him, smoke rising into a red sky, "
+            "panicked demons fleeing below, Indian mythology action art, "
+            "intense warm color palette"
+        ),
+    },
+    {
+        "image_id": "ramayana-018",
+        "generation_prompt": (
+            "Vibhishana the righteous demon prince crossing the ocean to "
+            "join Rama's army, standing on a celestial platform above the "
+            "water, noble expression on his face, wearing ornate demon "
+            "royal attire with golden crown, divine light welcoming him "
+            "from Rama's camp on the opposite shore, twilight sky with "
+            "stars appearing, Indian mythology art"
+        ),
+    },
+    {
+        "image_id": "ramayana-019",
+        "generation_prompt": (
+            "Sugriva the monkey king and Vali locked in fierce combat at "
+            "the entrance of Kishkindha cave, powerful monkey warriors "
+            "grappling with supernatural strength, dust and rocks flying, "
+            "Rama watching from behind a tree with his bow ready, dramatic "
+            "mountain backdrop, dynamic action composition, Indian mythology "
+            "battle art"
+        ),
+    },
+    {
+        "image_id": "ramayana-020",
+        "generation_prompt": (
+            "Rama meditating on the shore of the ocean before the Lanka "
+            "invasion, sitting cross-legged on a rock with eyes closed, "
+            "divine golden aura surrounding him, massive waves crashing "
+            "against the shore, the vanara army camped behind him with "
+            "torches and fires, a full moon reflecting on the dark ocean, "
+            "serene spiritual atmosphere, Indian mythology art"
+        ),
+    },
+    {
+        "image_id": "ramayana-021",
+        "generation_prompt": (
+            "Kumbhakarna the giant demon warrior awakening from his deep "
+            "sleep in an enormous underground chamber, stretching his "
+            "colossal body that fills the cavern, demon servants pouring "
+            "mountains of food before him, torches illuminating the vast "
+            "dark space, immense scale showing tiny figures compared to "
+            "the giant, Indian mythology art, dramatic perspective"
+        ),
+    },
+    {
+        "image_id": "ramayana-022",
+        "generation_prompt": (
+            "Indrajit son of Ravana launching the Nagastra serpent weapon "
+            "from his war chariot in the sky, thousands of magical snakes "
+            "raining down from storm clouds, binding Rama and Lakshmana "
+            "on the battlefield below, dark supernatural energy crackling, "
+            "war chariots and demon soldiers, Indian mythology dark "
+            "fantasy battle art"
+        ),
+    },
+    {
+        "image_id": "ramayana-023",
+        "generation_prompt": (
+            "Lord Rama firing the Brahmastra divine weapon at Ravana in "
+            "their final battle, the celestial arrow blazing with golden "
+            "fire and divine inscriptions, Ravana in his war chariot with "
+            "all ten heads roaring, the battlefield strewn with fallen "
+            "warriors, gods watching from the clouds above, Indian "
+            "mythology climactic battle art, epic scale composition"
+        ),
+    },
+    {
+        "image_id": "ramayana-024",
+        "generation_prompt": (
+            "Sita performing the Agni Pariksha fire ordeal, walking calmly "
+            "through a blazing sacred fire pit, her white saree untouched "
+            "by flames, serene divine expression on her face, Agni the "
+            "fire god rising to bear witness, Rama watching with emotion, "
+            "courtiers and vanaras gathered in a circle, golden firelight "
+            "illuminating the night scene, Indian mythology art"
+        ),
+    },
+    {
+        "image_id": "ramayana-025",
+        "generation_prompt": (
+            "The Pushpaka Vimana flying chariot soaring through a starlit "
+            "sky carrying Rama Sita and their companions back to Ayodhya, "
+            "an ornate golden celestial vehicle with jeweled canopies and "
+            "silk curtains, glowing with supernatural light, clouds parting "
+            "below revealing moonlit landscapes and rivers of ancient India, "
+            "magical fantasy Indian mythology art"
+        ),
+    },
+    {
+        "image_id": "ramayana-026",
+        "generation_prompt": (
+            "Shabari the elderly devotee offering berries to Lord Rama in "
+            "her humble forest hermitage, tasting each berry before offering "
+            "to ensure sweetness, Rama accepting with a warm gentle smile, "
+            "simple thatched hut surrounded by fruit trees and flowering "
+            "plants, soft golden afternoon light, devotional tenderness, "
+            "Indian mythology art, intimate composition"
+        ),
+    },
+    {
+        "image_id": "ramayana-027",
+        "generation_prompt": (
+            "Angada the young monkey prince standing defiantly in Ravana's "
+            "court as an emissary, one foot planted firmly on the ground "
+            "challenging all demons to move it, demon courtiers straining "
+            "and failing, Ravana watching from his throne with rage, ornate "
+            "demon palace interior with dark jeweled walls, Indian mythology "
+            "art, dramatic confrontation scene"
+        ),
+    },
+    {
+        "image_id": "ramayana-028",
+        "generation_prompt": (
+            "Hanuman opening his chest to reveal Rama and Sita seated in "
+            "his heart, a powerful devotional image with golden divine "
+            "light emanating from within his chest, Hanuman in a kneeling "
+            "pose with hands pulling open his chest, tears of devotion "
+            "in his eyes, celestial flowers falling around him, dark "
+            "background with divine radiance, Indian mythology devotional art"
+        ),
+    },
+    {
+        "image_id": "ramayana-029",
+        "generation_prompt": (
+            "The vanara army of millions marching towards Lanka along the "
+            "newly built Ram Setu bridge across the ocean, endless columns "
+            "of monkey warriors carrying weapons and banners, the bridge "
+            "stretching to the horizon over turquoise waters, towering "
+            "mountains of Lanka visible in the far distance, aerial "
+            "perspective, Indian mythology epic army art"
+        ),
+    },
+    {
+        "image_id": "ramayana-030",
+        "generation_prompt": (
+            "Rama and Sita in the serene Panchavati forest hermitage, "
+            "a beautiful thatched cottage surrounded by flowering trees "
+            "and a clear river, deer grazing peacefully nearby, Rama "
+            "sharpening arrows while Sita arranges flowers, soft dappled "
+            "sunlight through the canopy, idyllic pastoral scene, Indian "
+            "mythology art, warm peaceful atmosphere"
+        ),
+    },
+    {
+        "image_id": "ramayana-031",
+        "generation_prompt": (
+            "Tataka the fearsome demoness emerging from a dark cursed "
+            "forest, towering over the trees with wild hair and glowing "
+            "red eyes, dark magical energy swirling around her massive "
+            "form, young Rama facing her courageously with bow drawn, "
+            "dead twisted trees and skulls scattered on the ground, "
+            "horror fantasy atmosphere, Indian mythology dark art"
+        ),
+    },
+    {
+        "image_id": "ramayana-032",
+        "generation_prompt": (
+            "Dasharatha the king of Ayodhya in his royal court, seated on "
+            "a magnificent golden throne with lion armrests, wearing an "
+            "elaborate jeweled crown and royal robes, wise aged face with "
+            "a white beard, courtiers and ministers bowing, massive pillared "
+            "hall with painted ceilings and hanging oil lamps, Indian "
+            "mythology royal art, warm amber lighting"
+        ),
+    },
+    {
+        "image_id": "ramayana-033",
+        "generation_prompt": (
+            "Kaikeyi demanding her two boons from King Dasharatha in the "
+            "anger chamber Kopa Bhavan, dramatic confrontation scene, "
+            "Kaikeyi with a stern determined face pointing commandingly, "
+            "Dasharatha collapsed on the floor in grief, dark moody room "
+            "with a single oil lamp casting harsh shadows, emotional "
+            "tension, Indian mythology dramatic art"
+        ),
+    },
+    {
+        "image_id": "ramayana-034",
+        "generation_prompt": (
+            "Rama Sita and Lakshmana crossing the river Ganga on a wooden "
+            "boat steered by the boatman Kevat, misty early morning on the "
+            "sacred river, soft pink and orange dawn light reflecting on "
+            "calm waters, ancient ghats visible in the distance, Sita "
+            "trailing her hand in the water, serene departure scene, "
+            "Indian mythology art, luminous atmospheric lighting"
+        ),
+    },
+    {
+        "image_id": "ramayana-035",
+        "generation_prompt": (
+            "Sampati the elder vulture king perched on a rocky cliff "
+            "pointing towards Lanka across the ocean, guiding the vanara "
+            "search party, his wings scarred and broken from an ancient "
+            "encounter with the sun, vanaras looking in the direction "
+            "he points with renewed hope, dramatic cliff edge overlooking "
+            "an endless blue ocean, Indian mythology art"
+        ),
+    },
+    {
+        "image_id": "ramayana-036",
+        "generation_prompt": (
+            "Mandodari the queen of Lanka weeping over the fallen body of "
+            "Ravana on the battlefield, her tears glowing with supernatural "
+            "light, Ravana's massive ten-headed form lying defeated with "
+            "broken weapons around him, the smoldering battlefield with "
+            "fires and smoke, a poignant tragic scene, soft mournful "
+            "lighting, Indian mythology emotional art"
+        ),
+    },
+    {
+        "image_id": "ramayana-037",
+        "generation_prompt": (
+            "Nala and Neel the vanara engineers designing and building the "
+            "Ram Setu bridge with floating stones, detailed scene of monkey "
+            "engineers inscribing Rama's name on massive boulders that "
+            "magically float on water, ocean spray and construction "
+            "activity, engineering marvels of ancient mythology, dynamic "
+            "workers scene, Indian mythology art"
+        ),
+    },
+    {
+        "image_id": "ramayana-038",
+        "generation_prompt": (
+            "Lord Rama performing the Sandhya Vandana prayer at the bank "
+            "of river Sarayu during sunset, standing in waist-deep golden "
+            "water with folded hands facing the setting sun, divine rays "
+            "illuminating his form, sacred thread visible, ripples on the "
+            "calm river surface, birds flying in formation, spiritual "
+            "serenity, Indian mythology devotional art"
+        ),
+    },
+    {
+        "image_id": "ramayana-039",
+        "generation_prompt": (
+            "The demon Maricha transforming from a golden deer back into "
+            "his true demon form after being struck by Rama's arrow, "
+            "half deer and half demon in a supernatural transformation, "
+            "golden particles dissolving to reveal dark demonic features, "
+            "a forest clearing with divine arrow embedded, magical "
+            "transformation energy, Indian mythology fantasy art"
+        ),
+    },
+    {
+        "image_id": "ramayana-040",
+        "generation_prompt": (
+            "Garuda the divine eagle descending from the heavens to free "
+            "Rama and Lakshmana from the Nagastra serpent bonds on the "
+            "battlefield, enormous golden wings spread wide, divine wind "
+            "from his wings scattering thousands of magical snakes, bright "
+            "celestial light breaking through dark clouds, epic rescue "
+            "scene, Indian mythology divine art"
+        ),
+    },
+    {
+        "image_id": "ramayana-041",
+        "generation_prompt": (
+            "Trijata the kind demoness comforting Sita in the Ashoka "
+            "Vatika, narrating her prophetic dream of Rama's victory, "
+            "sitting under a moonlit ancient tree with luminous flowers, "
+            "Sita listening with hope in her eyes, gentle night breeze "
+            "stirring leaves, soft blue-silver moonlight, intimate "
+            "compassionate scene, Indian mythology art"
+        ),
+    },
+    {
+        "image_id": "ramayana-042",
+        "generation_prompt": (
+            "The burning of Khandava forest scene with Agni the fire god "
+            "consuming the ancient forest in a wall of divine flames, "
+            "animals fleeing, celestial beings watching from above, "
+            "massive columns of fire and smoke rising into a dark sky, "
+            "the scale of destruction stretching to the horizon, dramatic "
+            "inferno palette of reds oranges and blacks, Indian mythology art"
+        ),
+    },
+    {
+        "image_id": "ramayana-043",
+        "generation_prompt": (
+            "Ahalya being freed from her stone curse by Rama's divine "
+            "touch on the stone with his foot, the stone cracking with "
+            "golden light as a beautiful woman emerges from within, "
+            "ancient hermitage setting with overgrown vines, Sage "
+            "Gautama watching with tears of joy, divine particles "
+            "floating in the air, Indian mythology miraculous art"
+        ),
+    },
+    {
+        "image_id": "ramayana-044",
+        "generation_prompt": (
+            "Lakshmana falling unconscious on the battlefield after being "
+            "struck by Indrajit's Shakti weapon, Rama holding his brother "
+            "in his arms with anguish on his face, the divine weapon's "
+            "dark energy still crackling around the wound, vanara warriors "
+            "surrounding them in grief, dusty golden battlefield at dusk, "
+            "emotional dramatic scene, Indian mythology art"
+        ),
+    },
+    {
+        "image_id": "ramayana-045",
+        "generation_prompt": (
+            "Hanuman meeting Sita for the first time in the Ashoka Vatika "
+            "in Lanka, a tiny Hanuman revealing himself from a tree branch "
+            "above, presenting Rama's ring to the surprised and emotional "
+            "Sita below, moonlit garden with exotic flowers and guarded "
+            "walls, a tender moment of hope, soft luminous lighting, "
+            "Indian mythology art"
+        ),
+    },
+    {
+        "image_id": "ramayana-046",
+        "generation_prompt": (
+            "The city of Ayodhya decorated with millions of oil lamps for "
+            "Rama's return on Diwali night, a breathtaking cityscape of "
+            "ancient temples and palaces illuminated by countless diyas, "
+            "citizens celebrating on rooftops and streets, fireworks of "
+            "divine light in the sky, the Pushpaka Vimana approaching, "
+            "warm golden glow everywhere, Indian mythology festival art"
+        ),
+    },
+    {
+        "image_id": "ramayana-047",
+        "generation_prompt": (
+            "Parashurama confronting Rama on the road after the Swayamvar, "
+            "two divine warriors facing each other, Parashurama wielding "
+            "his legendary axe with fury, Rama calm and composed holding "
+            "the broken Shiva bow, divine energy crackling between them, "
+            "a tense standoff on a mountain path, dramatic storm clouds "
+            "gathering, Indian mythology confrontation art"
+        ),
+    },
+    {
+        "image_id": "ramayana-048",
+        "generation_prompt": (
+            "Jambavan the ancient bear king rallying the vanara warriors "
+            "before the Lanka battle, standing on a boulder addressing a "
+            "vast army with a commanding roar, aged but incredibly powerful "
+            "bear warrior wearing ancient battle scars, thousands of monkey "
+            "soldiers raising weapons in response, dust and war drums, "
+            "Indian mythology inspirational battle art"
+        ),
+    },
+    {
+        "image_id": "ramayana-049",
+        "generation_prompt": (
+            "Sita drawing Rama's portrait on a leaf while sitting by a "
+            "forest stream during their exile, delicate artistic moment "
+            "with Sita focused on the leaf art, clear stream reflecting "
+            "her image, colorful forest birds watching curiously, scattered "
+            "flowers and leaves around her, dappled sunlight creating "
+            "natural patterns, Indian mythology intimate art"
+        ),
+    },
+    {
+        "image_id": "ramayana-050",
+        "generation_prompt": (
+            "The final scene of Rama's divine departure ascending to the "
+            "heavens from the bank of river Sarayu, Rama walking into the "
+            "glowing golden waters that rise to meet the sky, celestial "
+            "beings and gods welcoming him above, citizens of Ayodhya "
+            "watching from the riverbank, a transcendent spiritual moment "
+            "with divine light filling the entire scene, Indian mythology "
+            "transcendental art, ethereal luminous atmosphere"
+        ),
+    },
+]
+
+# Delay between requests to respect rate limits.
+INTER_REQUEST_DELAY_S = 5
+# Max parallel image generation threads.
+MAX_WORKERS = 5
+# Thread-safe print lock.
+_print_lock = threading.Lock()
+
+
+def _log(msg: str) -> None:
+    """Thread-safe print."""
+    with _print_lock:
+        print(msg)
+
+
+def _generate_one(
+    entry: dict,
+    index: int,
+    total: int,
+    client: object,
+    dry_run: bool,
+) -> dict:
+    """Generate a single image. Designed to run inside a thread pool."""
+    image_id = entry["image_id"]
+    prompt = entry["generation_prompt"]
+    image_path = IMAGES_DIR / f"{image_id}.png"
+
+    _log(f"\n  [{index}/{total}] {image_id} — starting...")
+
+    if dry_run:
+        _log(f"  [{index}/{total}] {image_id} — [DRY RUN] skipped")
+        return {
+            "image_id": image_id,
+            "generation_prompt": prompt,
+            "image_path": f"data/images/{image_id}.png",
+        }
+
+    # Skip if already generated
+    if image_path.exists():
+        _log(f"  [{index}/{total}] {image_id} — already exists, skipped")
+        return {
+            "image_id": image_id,
+            "generation_prompt": prompt,
+            "image_path": f"data/images/{image_id}.png",
+        }
+
+    try:
+        _log(f"  [{index}/{total}] {image_id} — generating via gpt-image-1.5...")
+        response = client.images.generate(
+            model="gpt-image-1.5",
+            prompt=prompt,
+            size="1024x1024",
+            quality="medium",
+            n=1,
+        )
+
+        b64_data = response.data[0].b64_json
+        if not b64_data:
+            raise ValueError("No b64_json data in response")
+
+        image_bytes = base64.b64decode(b64_data)
+        image_path.write_bytes(image_bytes)
+        _log(f"  [{index}/{total}] {image_id} — saved ({len(image_bytes)} bytes)")
+
+        # Small stagger to reduce burst pressure
+        time.sleep(INTER_REQUEST_DELAY_S)
+
+        return {
+            "image_id": image_id,
+            "generation_prompt": prompt,
+            "image_path": f"data/images/{image_id}.png",
+        }
+
+    except Exception as exc:
+        _log(f"  [{index}/{total}] {image_id} — ERROR: {exc}")
+        return {
+            "image_id": image_id,
+            "generation_prompt": prompt,
+            "image_path": None,
+            "error": str(exc),
+        }
+
+
+def generate_and_save_images(dry_run: bool = False, max_workers: int = MAX_WORKERS) -> list[dict]:
+    """Generate images via gpt-image-1.5 using a thread pool.
+
+    Up to max_workers images are generated in parallel. Already-generated
+    images are skipped instantly so only new prompts consume API calls.
+
+    Returns:
+        Updated list of sample image entries with image_path fields.
+    """
+    IMAGES_DIR.mkdir(parents=True, exist_ok=True)
+    client = get_openai_client()
+    total = len(RAMAYANA_PROMPTS)
+
+    # Preserve ordering: map future → index so we can sort results.
+    results: list[dict | None] = [None] * total
+
+    with ThreadPoolExecutor(max_workers=max_workers) as pool:
+        future_to_idx = {
+            pool.submit(
+                _generate_one, entry, i + 1, total, client, dry_run,
+            ): i
+            for i, entry in enumerate(RAMAYANA_PROMPTS)
+        }
+
+        for future in as_completed(future_to_idx):
+            idx = future_to_idx[future]
+            try:
+                results[idx] = future.result()
+            except Exception as exc:
+                entry = RAMAYANA_PROMPTS[idx]
+                _log(f"  [{idx+1}/{total}] {entry['image_id']} — THREAD ERROR: {exc}")
+                results[idx] = {
+                    "image_id": entry["image_id"],
+                    "generation_prompt": entry["generation_prompt"],
+                    "image_path": None,
+                    "error": str(exc),
+                }
+
+    return [r for r in results if r is not None]
+
+
+def main() -> None:
+    """Entry point."""
+    parser = argparse.ArgumentParser(
+        description="Generate Ramayana-themed images via gpt-image-1.5",
+    )
+    parser.add_argument(
+        "--dry-run",
+        action="store_true",
+        help="List prompts without generating images",
+    )
+    parser.add_argument(
+        "--workers",
+        type=int,
+        default=MAX_WORKERS,
+        help=f"Number of parallel threads (default: {MAX_WORKERS})",
+    )
+    args = parser.parse_args()
+
+    print(f"Generating Ramayana-themed sample images ({args.workers} threads)...")
+    results = generate_and_save_images(dry_run=args.dry_run, max_workers=args.workers)
+
+    # Write updated sample_images.json
+    clean_results = [
+        {k: v for k, v in r.items() if k != "error"}
+        for r in results
+        if r.get("image_path") is not None
+    ]
+
+    SAMPLE_FILE.write_text(json.dumps(clean_results, indent=2) + "\n")
+    print(f"\nUpdated {SAMPLE_FILE} with {len(clean_results)} entries.")
+
+    # Report any failures
+    failures = [r for r in results if r.get("error")]
+    if failures:
+        print(f"\n{len(failures)} images failed to generate:")
+        for f in failures:
+            print(f"  {f['image_id']}: {f['error']}")
+
+
+if __name__ == "__main__":
+    sys.exit(main() or 0)

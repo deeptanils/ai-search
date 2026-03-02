@@ -14,6 +14,7 @@ from azure.search.documents.indexes import SearchIndexClient
 from openai import AsyncAzureOpenAI, AzureOpenAI
 
 from ai_search.config import (
+    load_blob_secrets,
     load_cv_secrets,
     load_foundry_secrets,
     load_openai_secrets,
@@ -146,4 +147,24 @@ def get_cv_client() -> httpx.AsyncClient:
         base_url=secrets.endpoint,
         headers={"Ocp-Apim-Subscription-Key": secrets.api_key},
         timeout=30.0,
+    )
+
+
+@lru_cache(maxsize=1)
+def get_blob_container_client():
+    """Return a cached Azure Blob Storage container client.
+
+    Uses DefaultAzureCredential (Entra ID) authentication.
+    Returns None if storage is not configured.
+    """
+    from azure.storage.blob import ContainerClient
+
+    secrets = load_blob_secrets()
+    if not secrets.account_url:
+        logger.warning("Azure Blob Storage not configured, skipping cloud upload")
+        return None
+    return ContainerClient(
+        account_url=secrets.account_url,
+        container_name=secrets.container_name,
+        credential=_get_credential(),
     )

@@ -1,52 +1,252 @@
 [
   {
-    "image_id": "sample-001",
-    "generation_prompt": "A cinematic night scene of a woman in a red dress walking through a rain-soaked Tokyo alley, neon signs reflecting off wet pavement, film noir lighting",
-    "image_url": "https://images.unsplash.com/photo-1542051841857-5f90071e7989?w=1024"
+    "image_id": "ramayana-001",
+    "generation_prompt": "Lord Rama standing majestically in an ancient Indian forest, drawing his divine golden bow Kodanda with a glowing arrow aimed at the sky, wearing royal blue armor with gold ornaments and a jeweled crown, divine aura radiating around him, epic Indian mythology art style, cinematic lighting, highly detailed",
+    "image_path": "data/images/ramayana-001.png"
   },
   {
-    "image_id": "sample-002",
-    "generation_prompt": "Golden hour portrait of an elderly fisherman mending nets on a weathered wooden dock, warm backlight, shallow depth of field, documentary style",
-    "image_url": "https://images.unsplash.com/photo-1545450660-3378a7f3a364?w=1024"
+    "image_id": "ramayana-002",
+    "generation_prompt": "Hanuman the mighty monkey god standing on top of a rocky hill overlooking the golden city of Lanka across the ocean, his muscular divine form glowing with orange-golden light, wearing a red dhoti, devotional pose with hands folded, dramatic sunset with clouds painted in orange and purple, Indian mythology art, epic cinematic composition",
+    "image_path": "data/images/ramayana-002.png"
   },
   {
-    "image_id": "sample-003",
-    "generation_prompt": "Aerial drone shot of turquoise ocean waves crashing against black volcanic rocks, abstract patterns in the foam, minimalist composition",
-    "image_url": "https://images.unsplash.com/photo-1505118380757-91f5f5632de0?w=1024"
+    "image_id": "ramayana-003",
+    "generation_prompt": "Hanuman wielding his mighty gada (mace) in a powerful battle stance, the massive golden mace raised above his head, thunderclouds gathering behind him crackling with lightning, divine aura of fire and energy radiating from his body, wearing warrior armor with a flowing red cape, Indian mythology epic art style, dramatic low-angle composition",
+    "image_path": "data/images/ramayana-003.png"
   },
   {
-    "image_id": "sample-004",
-    "generation_prompt": "Abandoned industrial warehouse interior with shafts of dusty light streaming through broken windows, urban decay aesthetic, high contrast black and white",
-    "image_url": "https://images.unsplash.com/photo-1518893063132-36e46dbe2428?w=1024"
+    "image_id": "ramayana-004",
+    "generation_prompt": "Goddess Sita sitting gracefully in the Ashoka Vatika garden in Lanka, surrounded by ancient supernatural trees with glowing golden leaves, wearing a flowing white and gold saree, serene but determined expression on her face, divine lotus flowers blooming around her, soft ethereal light filtering through the canopy, Indian mythology art, peaceful yet powerful",
+    "image_path": "data/images/ramayana-004.png"
   },
   {
-    "image_id": "sample-005",
-    "generation_prompt": "A child running through a sunflower field at sunset, motion blur on the edges, warm golden tones, joyful summer atmosphere, lifestyle photography",
-    "image_url": "https://images.unsplash.com/photo-1500485035595-cbe6f645feb1?w=1024"
+    "image_id": "ramayana-005",
+    "generation_prompt": "Ravana the ten-headed demon king of Lanka sitting on his ornate golden throne, each of his ten heads showing a different fierce expression, twenty powerful arms holding various divine weapons, surrounded by an opulent palace interior with jeweled pillars and burning torches, dark regal atmosphere, Indian mythology villain art, dramatic lighting from below",
+    "image_path": "data/images/ramayana-005.png"
   },
   {
-    "image_id": "sample-006",
-    "generation_prompt": "Moody forest landscape with fog rolling between ancient redwood trees, soft diffused light, earth tones, Pacific Northwest atmosphere",
-    "image_url": "https://images.unsplash.com/photo-1448375240586-882707db888b?w=1024"
+    "image_id": "ramayana-006",
+    "generation_prompt": "The epic Ram Setu bridge being built across the vast ocean by an army of vanaras (monkey warriors), massive boulders being placed with inscriptions of Lord Rama's name, dramatic ocean waves crashing against the stones, divine golden light streaming from the sky, thousands of vanaras working together, wide-angle panoramic composition, Indian mythology epic art",
+    "image_path": "data/images/ramayana-006.png"
   },
   {
-    "image_id": "sample-007",
-    "generation_prompt": "Close-up macro photograph of morning dew drops on a spider web, bokeh background of purple wildflowers, natural light, vivid colors",
-    "image_url": "https://images.unsplash.com/photo-1530053969600-caed2596d242?w=1024"
+    "image_id": "ramayana-007",
+    "generation_prompt": "Lakshmana standing guard at night with his golden bow drawn, protecting the forest dwelling where Ram and Sita sleep, moonlit ancient Indian wilderness with fireflies, the Lakshman Rekha protective line glowing on the ground, vigilant warrior expression, wearing green and gold armor, mystical forest atmosphere, Indian mythology art",
+    "image_path": "data/images/ramayana-007.png"
   },
   {
-    "image_id": "sample-008",
-    "generation_prompt": "Two musicians performing jazz on a dimly lit stage, saxophone and piano, smoke atmosphere, blue and amber stage lighting, concert photography",
-    "image_url": "https://images.unsplash.com/photo-1511192336575-5a79af67a629?w=1024"
+    "image_id": "ramayana-008",
+    "generation_prompt": "The golden deer Maricha leaping through an enchanted forest, its entire body shimmering with supernatural golden light and sparkling particles, jewel-like eyes glowing with magic, mystical forest surroundings with ancient trees and glowing flowers, the deer trailing streams of golden light as it runs, magical fantasy Indian mythology art style",
+    "image_path": "data/images/ramayana-008.png"
   },
   {
-    "image_id": "sample-009",
-    "generation_prompt": "Snow-covered mountain peak at dawn with alpenglow, dramatic clouds, wide-angle landscape, cold blue shadows contrasting warm pink highlights",
-    "image_url": "https://images.unsplash.com/photo-1519681393784-d120267933ba?w=1024"
+    "image_id": "ramayana-009",
+    "generation_prompt": "Jatayu the giant divine eagle fighting Ravana's flying chariot Pushpaka Vimana in an aerial combat scene to save Sita, massive wings spread across a dramatic cloudy sky, divine feathers glowing and falling, Ravana wielding a sword from the chariot, epic battle between good and evil, Indian mythology action art, dynamic composition",
+    "image_path": "data/images/ramayana-009.png"
   },
   {
-    "image_id": "sample-010",
-    "generation_prompt": "Bustling street food market in Bangkok at night, colorful lanterns, steam rising from woks, candid street photography, vibrant warm tones",
-    "image_url": "https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=1024"
+    "image_id": "ramayana-010",
+    "generation_prompt": "The grand coronation ceremony of Lord Rama in the golden palace of Ayodhya, Rama and Sita seated on the magnificent throne, celestial beings showering flowers from above, Hanuman kneeling devotionally, Lakshmana standing with a ceremonial umbrella, citizens celebrating, divine light illuminating the entire palace, ornate Indian architecture, Indian mythology art, warm golden atmosphere",
+    "image_path": "data/images/ramayana-010.png"
+  },
+  {
+    "image_id": "ramayana-011",
+    "generation_prompt": "Rama and Lakshmana walking through the dense Dandaka forest carrying bows and quivers, ancient banyan trees towering above them, shafts of golden sunlight piercing through the thick canopy, a narrow forest path ahead, peaceful yet mysterious atmosphere, Indian mythology art, warm earthy tones",
+    "image_path": "data/images/ramayana-011.png"
+  },
+  {
+    "image_id": "ramayana-012",
+    "generation_prompt": "Sage Vishwamitra guiding young Rama and Lakshmana through a dark enchanted forest to fight demons, the sage holding a glowing staff, both princes carrying golden bows, ethereal mist swirling at ground level, ancient trees with twisted roots, mystical blue-green moonlight, Indian mythology art",
+    "image_path": "data/images/ramayana-012.png"
+  },
+  {
+    "image_id": "ramayana-013",
+    "generation_prompt": "The breaking of Lord Shiva's bow Pinaka by Rama at Sita's Swayamvar ceremony, the massive ancient bow shattering with a burst of divine energy and light, shocked kings and princes watching from ornate seats, Sita watching with joy, a grand palace hall with decorated pillars, Indian mythology art, dramatic moment frozen in time",
+    "image_path": "data/images/ramayana-013.png"
+  },
+  {
+    "image_id": "ramayana-014",
+    "generation_prompt": "Bharata carrying Rama's golden paduka sandals on his head walking back to Ayodhya, a long procession behind him on a dusty ancient road, devotion and sadness on his face, the sandals glowing with divine light, rolling green hills of ancient India in the background, warm sunset tones, Indian mythology devotional art",
+    "image_path": "data/images/ramayana-014.png"
+  },
+  {
+    "image_id": "ramayana-015",
+    "generation_prompt": "Surpanakha the demoness in her terrifying true form attacking in the forest, sharp claws extended, wild dark hair flying, red fiery eyes glowing with rage, dark magical aura surrounding her, twisted trees and shadows in the background, dramatic horror-fantasy lighting, Indian mythology dark art",
+    "image_path": "data/images/ramayana-015.png"
+  },
+  {
+    "image_id": "ramayana-016",
+    "generation_prompt": "Hanuman flying across the vast ocean to Lanka carrying the Sanjeevani mountain on his palm, the entire mountain with glowing medicinal herbs lifted above the clouds, Hanuman's massive form stretching across the sky, moonlit ocean below with sparkling waves, dramatic clouds parting around him, Indian mythology epic art, wide cinematic composition",
+    "image_path": "data/images/ramayana-016.png"
+  },
+  {
+    "image_id": "ramayana-017",
+    "generation_prompt": "Hanuman setting Lanka on fire with his burning tail, leaping from rooftop to rooftop of golden palaces, massive flames engulfing the demon city, Hanuman's tail wrapped in blazing fire trailing behind him, smoke rising into a red sky, panicked demons fleeing below, Indian mythology action art, intense warm color palette",
+    "image_path": "data/images/ramayana-017.png"
+  },
+  {
+    "image_id": "ramayana-018",
+    "generation_prompt": "Vibhishana the righteous demon prince crossing the ocean to join Rama's army, standing on a celestial platform above the water, noble expression on his face, wearing ornate demon royal attire with golden crown, divine light welcoming him from Rama's camp on the opposite shore, twilight sky with stars appearing, Indian mythology art",
+    "image_path": "data/images/ramayana-018.png"
+  },
+  {
+    "image_id": "ramayana-019",
+    "generation_prompt": "Sugriva the monkey king and Vali locked in fierce combat at the entrance of Kishkindha cave, powerful monkey warriors grappling with supernatural strength, dust and rocks flying, Rama watching from behind a tree with his bow ready, dramatic mountain backdrop, dynamic action composition, Indian mythology battle art",
+    "image_path": "data/images/ramayana-019.png"
+  },
+  {
+    "image_id": "ramayana-020",
+    "generation_prompt": "Rama meditating on the shore of the ocean before the Lanka invasion, sitting cross-legged on a rock with eyes closed, divine golden aura surrounding him, massive waves crashing against the shore, the vanara army camped behind him with torches and fires, a full moon reflecting on the dark ocean, serene spiritual atmosphere, Indian mythology art",
+    "image_path": "data/images/ramayana-020.png"
+  },
+  {
+    "image_id": "ramayana-021",
+    "generation_prompt": "Kumbhakarna the giant demon warrior awakening from his deep sleep in an enormous underground chamber, stretching his colossal body that fills the cavern, demon servants pouring mountains of food before him, torches illuminating the vast dark space, immense scale showing tiny figures compared to the giant, Indian mythology art, dramatic perspective",
+    "image_path": "data/images/ramayana-021.png"
+  },
+  {
+    "image_id": "ramayana-022",
+    "generation_prompt": "Indrajit son of Ravana launching the Nagastra serpent weapon from his war chariot in the sky, thousands of magical snakes raining down from storm clouds, binding Rama and Lakshmana on the battlefield below, dark supernatural energy crackling, war chariots and demon soldiers, Indian mythology dark fantasy battle art",
+    "image_path": "data/images/ramayana-022.png"
+  },
+  {
+    "image_id": "ramayana-023",
+    "generation_prompt": "Lord Rama firing the Brahmastra divine weapon at Ravana in their final battle, the celestial arrow blazing with golden fire and divine inscriptions, Ravana in his war chariot with all ten heads roaring, the battlefield strewn with fallen warriors, gods watching from the clouds above, Indian mythology climactic battle art, epic scale composition",
+    "image_path": "data/images/ramayana-023.png"
+  },
+  {
+    "image_id": "ramayana-024",
+    "generation_prompt": "Sita performing the Agni Pariksha fire ordeal, walking calmly through a blazing sacred fire pit, her white saree untouched by flames, serene divine expression on her face, Agni the fire god rising to bear witness, Rama watching with emotion, courtiers and vanaras gathered in a circle, golden firelight illuminating the night scene, Indian mythology art",
+    "image_path": "data/images/ramayana-024.png"
+  },
+  {
+    "image_id": "ramayana-025",
+    "generation_prompt": "The Pushpaka Vimana flying chariot soaring through a starlit sky carrying Rama Sita and their companions back to Ayodhya, an ornate golden celestial vehicle with jeweled canopies and silk curtains, glowing with supernatural light, clouds parting below revealing moonlit landscapes and rivers of ancient India, magical fantasy Indian mythology art",
+    "image_path": "data/images/ramayana-025.png"
+  },
+  {
+    "image_id": "ramayana-026",
+    "generation_prompt": "Shabari the elderly devotee offering berries to Lord Rama in her humble forest hermitage, tasting each berry before offering to ensure sweetness, Rama accepting with a warm gentle smile, simple thatched hut surrounded by fruit trees and flowering plants, soft golden afternoon light, devotional tenderness, Indian mythology art, intimate composition",
+    "image_path": "data/images/ramayana-026.png"
+  },
+  {
+    "image_id": "ramayana-027",
+    "generation_prompt": "Angada the young monkey prince standing defiantly in Ravana's court as an emissary, one foot planted firmly on the ground challenging all demons to move it, demon courtiers straining and failing, Ravana watching from his throne with rage, ornate demon palace interior with dark jeweled walls, Indian mythology art, dramatic confrontation scene",
+    "image_path": "data/images/ramayana-027.png"
+  },
+  {
+    "image_id": "ramayana-028",
+    "generation_prompt": "Hanuman opening his chest to reveal Rama and Sita seated in his heart, a powerful devotional image with golden divine light emanating from within his chest, Hanuman in a kneeling pose with hands pulling open his chest, tears of devotion in his eyes, celestial flowers falling around him, dark background with divine radiance, Indian mythology devotional art",
+    "image_path": "data/images/ramayana-028.png"
+  },
+  {
+    "image_id": "ramayana-029",
+    "generation_prompt": "The vanara army of millions marching towards Lanka along the newly built Ram Setu bridge across the ocean, endless columns of monkey warriors carrying weapons and banners, the bridge stretching to the horizon over turquoise waters, towering mountains of Lanka visible in the far distance, aerial perspective, Indian mythology epic army art",
+    "image_path": "data/images/ramayana-029.png"
+  },
+  {
+    "image_id": "ramayana-030",
+    "generation_prompt": "Rama and Sita in the serene Panchavati forest hermitage, a beautiful thatched cottage surrounded by flowering trees and a clear river, deer grazing peacefully nearby, Rama sharpening arrows while Sita arranges flowers, soft dappled sunlight through the canopy, idyllic pastoral scene, Indian mythology art, warm peaceful atmosphere",
+    "image_path": "data/images/ramayana-030.png"
+  },
+  {
+    "image_id": "ramayana-031",
+    "generation_prompt": "Tataka the fearsome demoness emerging from a dark cursed forest, towering over the trees with wild hair and glowing red eyes, dark magical energy swirling around her massive form, young Rama facing her courageously with bow drawn, dead twisted trees and skulls scattered on the ground, horror fantasy atmosphere, Indian mythology dark art",
+    "image_path": "data/images/ramayana-031.png"
+  },
+  {
+    "image_id": "ramayana-032",
+    "generation_prompt": "Dasharatha the king of Ayodhya in his royal court, seated on a magnificent golden throne with lion armrests, wearing an elaborate jeweled crown and royal robes, wise aged face with a white beard, courtiers and ministers bowing, massive pillared hall with painted ceilings and hanging oil lamps, Indian mythology royal art, warm amber lighting",
+    "image_path": "data/images/ramayana-032.png"
+  },
+  {
+    "image_id": "ramayana-033",
+    "generation_prompt": "Kaikeyi demanding her two boons from King Dasharatha in the anger chamber Kopa Bhavan, dramatic confrontation scene, Kaikeyi with a stern determined face pointing commandingly, Dasharatha collapsed on the floor in grief, dark moody room with a single oil lamp casting harsh shadows, emotional tension, Indian mythology dramatic art",
+    "image_path": "data/images/ramayana-033.png"
+  },
+  {
+    "image_id": "ramayana-034",
+    "generation_prompt": "Rama Sita and Lakshmana crossing the river Ganga on a wooden boat steered by the boatman Kevat, misty early morning on the sacred river, soft pink and orange dawn light reflecting on calm waters, ancient ghats visible in the distance, Sita trailing her hand in the water, serene departure scene, Indian mythology art, luminous atmospheric lighting",
+    "image_path": "data/images/ramayana-034.png"
+  },
+  {
+    "image_id": "ramayana-035",
+    "generation_prompt": "Sampati the elder vulture king perched on a rocky cliff pointing towards Lanka across the ocean, guiding the vanara search party, his wings scarred and broken from an ancient encounter with the sun, vanaras looking in the direction he points with renewed hope, dramatic cliff edge overlooking an endless blue ocean, Indian mythology art",
+    "image_path": "data/images/ramayana-035.png"
+  },
+  {
+    "image_id": "ramayana-036",
+    "generation_prompt": "Mandodari the queen of Lanka weeping over the fallen body of Ravana on the battlefield, her tears glowing with supernatural light, Ravana's massive ten-headed form lying defeated with broken weapons around him, the smoldering battlefield with fires and smoke, a poignant tragic scene, soft mournful lighting, Indian mythology emotional art",
+    "image_path": "data/images/ramayana-036.png"
+  },
+  {
+    "image_id": "ramayana-037",
+    "generation_prompt": "Nala and Neel the vanara engineers designing and building the Ram Setu bridge with floating stones, detailed scene of monkey engineers inscribing Rama's name on massive boulders that magically float on water, ocean spray and construction activity, engineering marvels of ancient mythology, dynamic workers scene, Indian mythology art",
+    "image_path": "data/images/ramayana-037.png"
+  },
+  {
+    "image_id": "ramayana-038",
+    "generation_prompt": "Lord Rama performing the Sandhya Vandana prayer at the bank of river Sarayu during sunset, standing in waist-deep golden water with folded hands facing the setting sun, divine rays illuminating his form, sacred thread visible, ripples on the calm river surface, birds flying in formation, spiritual serenity, Indian mythology devotional art",
+    "image_path": "data/images/ramayana-038.png"
+  },
+  {
+    "image_id": "ramayana-039",
+    "generation_prompt": "The demon Maricha transforming from a golden deer back into his true demon form after being struck by Rama's arrow, half deer and half demon in a supernatural transformation, golden particles dissolving to reveal dark demonic features, a forest clearing with divine arrow embedded, magical transformation energy, Indian mythology fantasy art",
+    "image_path": "data/images/ramayana-039.png"
+  },
+  {
+    "image_id": "ramayana-040",
+    "generation_prompt": "Garuda the divine eagle descending from the heavens to free Rama and Lakshmana from the Nagastra serpent bonds on the battlefield, enormous golden wings spread wide, divine wind from his wings scattering thousands of magical snakes, bright celestial light breaking through dark clouds, epic rescue scene, Indian mythology divine art",
+    "image_path": "data/images/ramayana-040.png"
+  },
+  {
+    "image_id": "ramayana-041",
+    "generation_prompt": "Trijata the kind demoness comforting Sita in the Ashoka Vatika, narrating her prophetic dream of Rama's victory, sitting under a moonlit ancient tree with luminous flowers, Sita listening with hope in her eyes, gentle night breeze stirring leaves, soft blue-silver moonlight, intimate compassionate scene, Indian mythology art",
+    "image_path": "data/images/ramayana-041.png"
+  },
+  {
+    "image_id": "ramayana-042",
+    "generation_prompt": "The burning of Khandava forest scene with Agni the fire god consuming the ancient forest in a wall of divine flames, animals fleeing, celestial beings watching from above, massive columns of fire and smoke rising into a dark sky, the scale of destruction stretching to the horizon, dramatic inferno palette of reds oranges and blacks, Indian mythology art",
+    "image_path": "data/images/ramayana-042.png"
+  },
+  {
+    "image_id": "ramayana-043",
+    "generation_prompt": "Ahalya being freed from her stone curse by Rama's divine touch on the stone with his foot, the stone cracking with golden light as a beautiful woman emerges from within, ancient hermitage setting with overgrown vines, Sage Gautama watching with tears of joy, divine particles floating in the air, Indian mythology miraculous art",
+    "image_path": "data/images/ramayana-043.png"
+  },
+  {
+    "image_id": "ramayana-044",
+    "generation_prompt": "Lakshmana falling unconscious on the battlefield after being struck by Indrajit's Shakti weapon, Rama holding his brother in his arms with anguish on his face, the divine weapon's dark energy still crackling around the wound, vanara warriors surrounding them in grief, dusty golden battlefield at dusk, emotional dramatic scene, Indian mythology art",
+    "image_path": "data/images/ramayana-044.png"
+  },
+  {
+    "image_id": "ramayana-045",
+    "generation_prompt": "Hanuman meeting Sita for the first time in the Ashoka Vatika in Lanka, a tiny Hanuman revealing himself from a tree branch above, presenting Rama's ring to the surprised and emotional Sita below, moonlit garden with exotic flowers and guarded walls, a tender moment of hope, soft luminous lighting, Indian mythology art",
+    "image_path": "data/images/ramayana-045.png"
+  },
+  {
+    "image_id": "ramayana-046",
+    "generation_prompt": "The city of Ayodhya decorated with millions of oil lamps for Rama's return on Diwali night, a breathtaking cityscape of ancient temples and palaces illuminated by countless diyas, citizens celebrating on rooftops and streets, fireworks of divine light in the sky, the Pushpaka Vimana approaching, warm golden glow everywhere, Indian mythology festival art",
+    "image_path": "data/images/ramayana-046.png"
+  },
+  {
+    "image_id": "ramayana-047",
+    "generation_prompt": "Parashurama confronting Rama on the road after the Swayamvar, two divine warriors facing each other, Parashurama wielding his legendary axe with fury, Rama calm and composed holding the broken Shiva bow, divine energy crackling between them, a tense standoff on a mountain path, dramatic storm clouds gathering, Indian mythology confrontation art",
+    "image_path": "data/images/ramayana-047.png"
+  },
+  {
+    "image_id": "ramayana-048",
+    "generation_prompt": "Jambavan the ancient bear king rallying the vanara warriors before the Lanka battle, standing on a boulder addressing a vast army with a commanding roar, aged but incredibly powerful bear warrior wearing ancient battle scars, thousands of monkey soldiers raising weapons in response, dust and war drums, Indian mythology inspirational battle art",
+    "image_path": "data/images/ramayana-048.png"
+  },
+  {
+    "image_id": "ramayana-049",
+    "generation_prompt": "Sita drawing Rama's portrait on a leaf while sitting by a forest stream during their exile, delicate artistic moment with Sita focused on the leaf art, clear stream reflecting her image, colorful forest birds watching curiously, scattered flowers and leaves around her, dappled sunlight creating natural patterns, Indian mythology intimate art",
+    "image_path": "data/images/ramayana-049.png"
+  },
+  {
+    "image_id": "ramayana-050",
+    "generation_prompt": "The final scene of Rama's divine departure ascending to the heavens from the bank of river Sarayu, Rama walking into the glowing golden waters that rise to meet the sky, celestial beings and gods welcoming him above, citizens of Ayodhya watching from the riverbank, a transcendent spiritual moment with divine light filling the entire scene, Indian mythology transcendental art, ethereal luminous atmosphere",
+    "image_path": "data/images/ramayana-050.png"
   }
 ]

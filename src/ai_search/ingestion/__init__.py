@@ -1,1 +1,1 @@
-"""Ingestion module — loads images and generates synthetic metadata."""
+"""Ingestion module — loads images, uploads to blob, and indexes to search."""

@@ -2,16 +2,45 @@
 
 from __future__ import annotations
 
+from enum import StrEnum
+
 from pydantic import BaseModel, Field
+
+
+class SearchMode(StrEnum):
+    """Search modality selector.
+
+    TEXT  — 3-vector RRF (semantic + structural + style) text-to-image.
+    IMAGE — GPT-4o extraction + 4-vector RRF (3 text + image) image-to-image.
+    """
+
+    TEXT = "text"
+    IMAGE = "image"
 
 
 class CharacterDescription(BaseModel):
     """Per-character structured descriptions for embedding."""
 
-    character_id: str = Field(description="Descriptive identifier, e.g. 'woman_red_dress'")
-    semantic: str = Field(description="2-3 sentences: identity, role, appearance, clothing")
-    emotion: str = Field(description="2-3 sentences: emotional expression, body language cues")
-    pose: str = Field(description="2-3 sentences: physical position, orientation, gestures")
+    character_id: str = Field(
+        description="Character's proper name in lowercase, e.g. 'hanuman', "
+        "'lord_rama', 'sita', 'ravana'. Use descriptive identifier only "
+        "when no name is identifiable, e.g. 'warrior_blue_armor'."
+    )
+    semantic: str = Field(
+        description="2-3 sentences: identity by proper name, mythological "
+        "role, specific costume/attire worn, jewelry/ornaments visible, "
+        "weapons/props held (gada, bow, arrows, torch, mountain), "
+        "character form or avatar (giant, multi-headed, blue-skinned)"
+    )
+    emotion: str = Field(
+        description="2-3 sentences: emotional expression (fury, devotion, "
+        "sorrow, triumph), body language cues, intensity of emotion"
+    )
+    pose: str = Field(
+        description="2-3 sentences: specific action being performed "
+        "(flying, fighting, kneeling, lifting), physical position, "
+        "orientation, gestures, interaction with other characters or objects"
+    )
 
 
 class ImageMetadata(BaseModel):
@@ -22,6 +51,26 @@ class ImageMetadata(BaseModel):
     lighting_condition: str
     primary_subject: str
     secondary_subjects: list[str] = Field(default_factory=list)
+    character_action: str = Field(
+        default="",
+        description="Primary action verb: flying, fighting, kneeling, "
+        "lifting, burning, meditating, blessing, mourning, charging",
+    )
+    weapons_props: list[str] = Field(
+        default_factory=list,
+        description="Weapons and props visible: gada, bow, arrows, trident, "
+        "mountain, torch, chariot, chakra, lotus, crown, mace",
+    )
+    location_name: str = Field(
+        default="",
+        description="Named location: Lanka, Ayodhya, Kishkindha, Ashoka Vatika, "
+        "Dandaka forest, Ram Setu, sky, ocean, palace, battlefield",
+    )
+    episode_name: str = Field(
+        default="",
+        description="Named story episode: Lanka Dahan, Sanjeevani quest, "
+        "Setu Bandhan, Sita Haran, Swayamvar, Agni Pariksha, Bali Vadh",
+    )
     artistic_style: str
     color_palette: list[str] = Field(default_factory=list)
     tags: list[str] = Field(default_factory=list)
@@ -66,11 +115,19 @@ class LowLightMetrics(BaseModel):
 class ImageExtraction(BaseModel):
     """Complete GPT-4o vision extraction output (used as structured output schema)."""
 
-    semantic_description: str = Field(description="Rich 200-word description for semantic embedding")
-    structural_description: str = Field(
-        description="150-word spatial/composition analysis for structural embedding"
+    semantic_description: str = Field(
+        description="250-word description covering: named characters, specific "
+        "actions, weapons/props, costumes/jewelry, character form/avatar, "
+        "location, story episode, emotional tone, and scale relationships"
     )
-    style_description: str = Field(description="150-word artistic style analysis for style embedding")
+    structural_description: str = Field(
+        description="150-word spatial composition: character positioning, scale "
+        "relationships, camera angle, action direction, depth staging"
+    )
+    style_description: str = Field(
+        description="150-word artistic treatment: color palette, lighting type, "
+        "texture, atmosphere, rendering approach, cultural art conventions"
+    )
     characters: list[CharacterDescription] = Field(default_factory=list)
     metadata: ImageMetadata
     narrative: NarrativeIntent
@@ -93,10 +150,15 @@ class SearchDocument(BaseModel):
 
     image_id: str
     generation_prompt: str
+    image_url: str = ""
     scene_type: str
     time_of_day: str
     lighting_condition: str
     primary_subject: str
+    character_action: str = ""
+    weapons_props: list[str] = Field(default_factory=list)
+    location_name: str = ""
+    episode_name: str = ""
     artistic_style: str
     tags: list[str]
     narrative_theme: str
@@ -120,5 +182,6 @@ class SearchResult(BaseModel):
     image_id: str
     search_score: float
     generation_prompt: str | None = None
+    image_url: str | None = None
     scene_type: str | None = None
     tags: list[str] = Field(default_factory=list)
