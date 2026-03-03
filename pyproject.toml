@@ -50,6 +50,8 @@ packages = ["src/ai_search"]
 
 [tool.uv]
 package = true
+# Pin cffi <2.0 — cffi 2.0 removed _cffi_backend which cryptography still needs
+override-dependencies = ["cffi<2.0"]
 
 [tool.ruff]
 target-version = "py311"
